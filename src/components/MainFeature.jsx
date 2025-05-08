@@ -7,6 +7,7 @@ import NumberRecognitionGame from './math/NumberRecognitionGame';
 import CountingGame from './math/CountingGame';
 import BasicArithmeticGame from './math/BasicArithmeticGame';
 import FractionGame from './math/FractionGame';
+import ShapeGame from './math/ShapeGame';
 
 const MainFeature = ({ playerName, subject, darkMode }) => {
   // State for game mechanics
@@ -459,6 +460,16 @@ const MainFeature = ({ playerName, subject, darkMode }) => {
           onBackToMenu={handleBackToGameSelection}
           onGameComplete={(finalScore, finalLevel) => {
             setBadges(prev => [...prev, `fraction-master-${finalLevel}`]);
+          }}
+          onScoreChange={handleGameScoreChange}
+        />
+      )}
+
+      {activeGame === 'geometry' && (
+        <ShapeGame 
+          onBackToMenu={handleBackToGameSelection}
+          onGameComplete={(finalScore, finalLevel) => {
+            setBadges(prev => [...prev, `geometry-master-${finalLevel}`]);
           }}
           onScoreChange={handleGameScoreChange}
         />

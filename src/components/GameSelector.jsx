@@ -55,7 +55,6 @@ const GameSelector = ({ subject, onGameSelect, playerName }) => {
         icon: CircleIcon,
         color: 'bg-pink-100 dark:bg-pink-900/30',
         iconColor: 'text-pink-600 dark:text-pink-400',
-        comingSoon: true
       }
     ],
     reading: [
