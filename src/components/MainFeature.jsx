@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
 import getIcon from '../utils/iconUtils';
+import GameSelector from './GameSelector';
+import NumberRecognitionGame from './math/NumberRecognitionGame';
+
 
 const MainFeature = ({ playerName, subject, darkMode }) => {
   // State for game mechanics
@@ -19,6 +22,8 @@ const MainFeature = ({ playerName, subject, darkMode }) => {
   const [streak, setStreak] = useState(0);
   const [badges, setBadges] = useState([]);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [activeGame, setActiveGame] = useState(null);
+  const [showGameSelector, setShowGameSelector] = useState(true);
 
   // Icon components
   const HeartIcon = getIcon('Heart');
@@ -34,7 +39,9 @@ const MainFeature = ({ playerName, subject, darkMode }) => {
 
   // Generate question based on subject and level
   useEffect(() => {
-    generateQuestion();
+    if (!showGameSelector && !activeGame) {
+      generateQuestion();
+    }
   }, [subject, currentLevel]);
 
   // Check for badge achievements
@@ -63,6 +70,26 @@ const MainFeature = ({ playerName, subject, darkMode }) => {
       autoClose: 5000,
       icon: <AwardIcon className="text-amber-400" />
     });
+  };
+
+  // Handle game selection from the game selector
+  const handleGameSelect = (gameId) => {
+    setActiveGame(gameId);
+    setShowGameSelector(false);
+    
+    toast.info(`Starting ${gameId.split('-').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)).join(' ')} game!`);
+  };
+  
+  // Handle back to game selection
+  const handleBackToGameSelection = () => {
+    setActiveGame(null);
+    setShowGameSelector(true);
+  };
+  
+  // Handle score updates from games
+  const handleGameScoreChange = (newScore) => {
+    setScore(newScore);
   };
 
   const generateQuestion = () => {
@@ -319,10 +346,34 @@ const MainFeature = ({ playerName, subject, darkMode }) => {
       animate="visible"
       exit="exit"
     >
-      {/* Game Header */}
+      {/* Game Header - always shown regardless of game state */}
       <motion.div 
-        className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4"
-        variants={itemVariants}
+        className={`flex flex-col md:flex-row justify-between items-center ${activeGame ? 'mb-4' : 'mb-8'} gap-4`}
+        variants={itemVariants} 
+      >
+        <div className="flex flex-col">
+          <h2 className="text-2xl md:text-3xl font-bold">
+            <span className="text-primary">
+              {subject === 'math' ? 'Math' : 'Reading'} Adventure
+            </span>
+          </h2>
+          <p className="text-surface-600 dark:text-surface-400">
+            Hello, <span className="font-semibold">{playerName}!</span> {!activeGame && `Level: ${currentLevel}`}
+          </p>
+        </div>
+        
+        <div className="flex items-center gap-6">          
+          <div className="flex items-center gap-1">
+            <StarIcon className="w-5 h-5 text-amber-400" />
+            <span className="font-bold">{score}</span>
+          </div>
+        </div>
+      </motion.div>
+      
+      {/* Secondary header for word-matching game */}
+      {!showGameSelector && !activeGame && (
+      <motion.div 
+        className="flex justify-between items-center mb-8"
       >
         <div className="flex flex-col">
           <h2 className="text-2xl md:text-3xl font-bold">
@@ -360,9 +411,26 @@ const MainFeature = ({ playerName, subject, darkMode }) => {
             <RefreshCwIcon className="w-5 h-5" />
           </button>
         </div>
-      </motion.div>
+      </motion.div>)}
 
       {/* Game Content */}
+      {showGameSelector && (
+        <GameSelector 
+          subject={subject}
+          onGameSelect={handleGameSelect}
+          playerName={playerName}
+        />
+      )}
+
+      {activeGame === 'number-recognition' && (
+        <NumberRecognitionGame 
+          onBackToMenu={handleBackToGameSelection}
+          onGameComplete={(finalScore, finalLevel) => {
+            setBadges(prev => [...prev, `number-master-${finalLevel}`]);
+          }}
+          onScoreChange={handleGameScoreChange}
+        />
+      )}
       <AnimatePresence mode="wait">
         {!gameOver && !levelComplete ? (
           <motion.div
