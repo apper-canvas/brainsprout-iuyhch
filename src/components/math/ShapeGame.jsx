@@ -188,7 +188,7 @@ const ShapeGame = ({ onBackToMenu, onGameComplete, onScoreChange }) => {
     }
     
     setQuestion({
-      text: questionText,
+      text: questionTemplates[currentLevel][Math.floor(Math.random() * questionTemplates[currentLevel].length)],
       shape: selectedShape,
       correctAnswer: selectedShape.name
     });
@@ -354,7 +354,7 @@ const ShapeGame = ({ onBackToMenu, onGameComplete, onScoreChange }) => {
         </div>
       </div>
 
-      {/* Game Title */}
+      {/* Game Title and Level Display */}
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-primary">Shape Explorer</h2>
         <p className="text-surface-600 dark:text-surface-400">
@@ -404,15 +404,15 @@ const ShapeGame = ({ onBackToMenu, onGameComplete, onScoreChange }) => {
               {options.map((option, index) => (
                 <motion.button
                   key={index}
-                  onClick={() => handleOptionSelect(option)}
-                  disabled={showFeedback}
+                  onClick={() => !showFeedback && handleOptionSelect(option)}
+                  disabled={showFeedback || gameOver}
                   className={`p-4 rounded-xl font-medium text-center transition-all ${
                     selectedOption === option
                       ? isCorrect
                         ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-2 border-green-500'
                         : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border-2 border-red-500'
-                      : 'bg-surface-100 dark:bg-surface-700 hover:bg-surface-200 dark:hover:bg-surface-600 text-surface-800 dark:text-surface-200'
-                  }`}
+                      : 'bg-surface-100 dark:bg-surface-700 hover:bg-surface-200 dark:hover:bg-surface-600 text-surface-900 dark:text-surface-100 border border-surface-300 dark:border-surface-600'
+                  } relative overflow-hidden`}
                   whileHover={{ scale: showFeedback ? 1 : 1.03 }}
                   whileTap={{ scale: showFeedback ? 1 : 0.98 }}
                   variants={itemVariants}
@@ -427,6 +427,12 @@ const ShapeGame = ({ onBackToMenu, onGameComplete, onScoreChange }) => {
                       )}
                     </span>
                   )}
+                  {/* Ensure text is always visible with a semi-transparent background */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-lg font-medium">
+                      {option}
+                    </span>
+                  </div>
                 </motion.button>
               ))}
             </div>
@@ -507,7 +513,7 @@ const ShapeGame = ({ onBackToMenu, onGameComplete, onScoreChange }) => {
                   onClick={advanceLevel}
                   className="btn btn-primary py-3 px-6"
                 >
-                  Next Level
+                  Continue to Level {currentLevel + 1}
                 </button>
               ) : (
                 <button
