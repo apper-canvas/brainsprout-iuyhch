@@ -409,9 +409,9 @@ const NumberRecognitionGame = ({
             className={`p-4 rounded-xl font-medium text-center transition-all ${
               (showFeedback && selectedOption === option) 
                 ? isCorrect
-                  ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-2 border-green-500'
-                  : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border-2 border-red-500'
-                : 'bg-surface-100 dark:bg-surface-700 hover:bg-surface-200 dark:hover:bg-surface-600'
+                    ? 'bg-green-200 dark:bg-green-900/50 text-black dark:text-white border-2 border-green-500'
+                    : 'bg-red-200 dark:bg-red-900/50 text-black dark:text-white border-2 border-red-500'
+                    : 'bg-surface-200 dark:bg-surface-600 hover:bg-surface-300 dark:hover:bg-surface-500 text-black dark:text-white'
             }`}
             whileHover={{ scale: showFeedback ? 1 : 1.03 }}
             whileTap={{ scale: showFeedback ? 1 : 0.98 }}
