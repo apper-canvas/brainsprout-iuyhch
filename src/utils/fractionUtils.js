@@ -282,35 +282,67 @@ export const toImproperFraction = (whole, numerator, denominator) => {
  * @returns {Object} Result fraction with status information
  */
 export const subtractFractions = (fraction1, fraction2) => {
-  // Validate fraction objects
+  // Validate first fraction object
   if (!fraction1 || typeof fraction1 !== 'object' || 
       fraction1 === null ||
       !('numerator' in fraction1) || !('denominator' in fraction1)) {
     return {
       fraction: null,
-      error: "Invalid first fraction object",
+      error: "Invalid first fraction: Must be a valid fraction object",
       success: false
     };
   }
   
+  // Validate second fraction object
   if (!fraction2 || typeof fraction2 !== 'object' ||
       fraction2 === null ||
       !('numerator' in fraction2) || !('denominator' in fraction2)) {
     return {
       fraction: null,
-      error: "Invalid second fraction object",
+      error: "Invalid second fraction: Must be a valid fraction object",
       success: false
     };
   }
   
-  // Create the negative of the second fraction
-  const negatedFraction2 = {
-    numerator: -fraction2.numerator,
-    denominator: fraction2.denominator
-  };
-  
-  // Subtract by adding the negated second fraction
-  return addFractions(fraction1, negatedFraction2);
+  // Check for zero denominators
+  if (fraction1.denominator === 0 || fraction2.denominator === 0) {
+    return {
+      fraction: null,
+      error: "Cannot subtract fractions with zero denominators",
+      success: false
+    };
+  }
+
+  // Handle special case: subtracting zero
+  if (fraction2.numerator === 0) {
+    return {
+      fraction: { ...fraction1 },
+      success: true
+    };
+  }
+
+  // Handle special case: subtracting from zero
+  if (fraction1.numerator === 0) {
+    return {
+      fraction: {
+        numerator: -fraction2.numerator,
+        denominator: fraction2.denominator,
+        isNegative: !fraction2.isNegative
+      },
+      success: true
+    };
+  }
+
+  // Find the least common multiple of the denominators
+  const commonDenominator = lcm(fraction1.denominator, fraction2.denominator);
+
+  // Scale the numerators to match the common denominator
+  const scaledNum1 = fraction1.numerator * (commonDenominator / fraction1.denominator);
+  const scaledNum2 = fraction2.numerator * (commonDenominator / fraction2.denominator);
+
+  // Subtract the numerators
+  const result = createFraction(scaledNum1 - scaledNum2, commonDenominator);
+  return result.success ? simplifyFraction(result.fraction) : result;
 };
 
 /**
