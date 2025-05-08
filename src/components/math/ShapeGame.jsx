@@ -179,6 +179,8 @@ const ShapeGame = ({ onBackToMenu, onGameComplete, onScoreChange }) => {
       3: ["What 3D shape is represented here?", "Identify this three-dimensional shape:", "Name this 3D geometric form:", "Which 3D geometric solid is shown?"]
     };
     
+    let questionText;
+    if (currentLevel < 3) {
       questionText = `Identify this geometric shape:`;
     } else {
       questionText = `What 3D shape is represented here?`;
