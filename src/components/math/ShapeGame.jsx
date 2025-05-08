@@ -274,7 +274,7 @@ const ShapeGame = ({ onBackToMenu, onGameComplete, onScoreChange }) => {
     generateQuestion();
     
     toast.info(`🚀 Level ${newLevel} unlocked!`, {
-      icon: getIcon('Zap')({ className: "text-purple-500" })
+      icon: <ZapIcon className="text-purple-500" />
     });
   };
 
