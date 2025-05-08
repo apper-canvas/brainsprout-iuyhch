@@ -434,6 +434,7 @@ const BasicArithmeticGame = ({ onBackToMenu, onGameComplete, onScoreChange }) =>
                         </div>
                       </>
                     )}
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
