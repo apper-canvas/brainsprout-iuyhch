@@ -113,17 +113,6 @@ const CountingGame = ({
       setQuestion({
         text: "How many objects do you see?",
         display: challenge.objectDisplay.display,
-    if (challenge.targetCount) {
-      setPreviousNumbers(prev => {
-        const updated = [...prev, challenge.targetCount];
-        return updated.length > 10 ? updated.slice(-10) : updated;
-      });
-    } else if (challenge.answer) {
-      setPreviousNumbers(prev => {
-        const updated = [...prev, challenge.answer];
-        return updated.length > 10 ? updated.slice(-10) : updated;
-      });
-    }
         "How many objects do you see?",
         correctAnswer: challenge.targetCount,
         // Track more information for better feedback
@@ -132,6 +121,16 @@ const CountingGame = ({
           objectName: getRandomCountingObjectName(challenge.objectDisplay.display)
         }
       });
+      
+      // Update the list of previous numbers
+      if (challenge.targetCount) {
+        setPreviousNumbers(prev => {
+          const updated = [...prev, challenge.targetCount];
+          return updated.length > 10 ? updated.slice(-10) : updated;
+        });
+      }
+    } else if (challenge.type === 'skip-counting') {
+      setQuestion({
         // Track more information for better feedback
           groupSize: challenge.objectDisplay.type === 'grouped' ? 10 : 1,
           objectName: getRandomCountingObjectName(challenge.objectDisplay.display)
