@@ -46,7 +46,8 @@ const GameSelector = ({ subject, onGameSelect, playerName }) => {
         description: 'Learn to identify and work with fractions',
         icon: DivideIcon,
         color: 'bg-amber-100 dark:bg-amber-900/30',
-        iconColor: 'text-amber-600 dark:text-amber-400'
+        iconColor: 'text-amber-600 dark:text-amber-400',
+        comingSoon: true
       },
       {
         id: 'geometry',
