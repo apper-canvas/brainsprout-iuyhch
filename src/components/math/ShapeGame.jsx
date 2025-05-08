@@ -417,7 +417,7 @@ const ShapeGame = ({ onBackToMenu, onGameComplete, onScoreChange }) => {
                   whileTap={{ scale: showFeedback ? 1 : 0.98 }}
                   variants={itemVariants}
                 >
-                  <span className="text-black dark:text-white font-medium">{option}</span>
+                  <span className="!text-black dark:!text-white font-medium">{option}</span>
                   {showFeedback && selectedOption === option && (
                     <span className="inline-flex ml-2">
                       {isCorrect ? (
