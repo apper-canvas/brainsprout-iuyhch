@@ -140,6 +140,7 @@ export const simplifyFraction = (fraction) => {
 export const addFractions = (fraction1, fraction2) => {
   // Validate fraction objects
   if (!fraction1 || typeof fraction1 !== 'object' || 
+      fraction1 === null ||
       !('numerator' in fraction1) || !('denominator' in fraction1)) {
     return {
       fraction: null,
@@ -149,6 +150,7 @@ export const addFractions = (fraction1, fraction2) => {
   }
   
   if (!fraction2 || typeof fraction2 !== 'object' ||
+      fraction2 === null ||
       !('numerator' in fraction2) || !('denominator' in fraction2)) {
     return {
       fraction: null,
@@ -157,6 +159,17 @@ export const addFractions = (fraction1, fraction2) => {
     };
   }
   
+  // Check for zero denominators
+  if (fraction1.denominator === 0 || fraction2.denominator === 0) {
+    return {
+      fraction: null,
+      error: "Cannot add fractions with zero denominators",
+      success: false
+    };
+  }
+  
+  const { numerator: num1, denominator: den1 } = fraction1;
+  const { numerator: num2, denominator: den2 } = fraction2;
   // Find the least common multiple of the denominators
   const commonDenominator = lcm(fraction1.denominator, fraction2.denominator);
   
@@ -176,6 +189,93 @@ export const addFractions = (fraction1, fraction2) => {
 };
 
 /**
+ * Converts an improper fraction to a mixed number
+ * @param {Object} fraction - The improper fraction to convert
+ * @returns {Object} Mixed number representation with whole, numerator, denominator
+ */
+export const toMixedNumber = (fraction) => {
+  // Validate fraction object
+  if (!fraction || typeof fraction !== 'object' || 
+      !('numerator' in fraction) || !('denominator' in fraction)) {
+    return {
+      mixedNumber: null,
+      error: "Invalid fraction object",
+      success: false
+    };
+  }
+  
+  // Check for division by zero
+  if (fraction.denominator === 0) {
+    return {
+      mixedNumber: null,
+      error: "Denominator cannot be zero",
+      success: false
+    };
+  }
+  
+  // Get absolute values
+  const absNum = Math.abs(fraction.numerator);
+  const absDen = Math.abs(fraction.denominator);
+  const isNegative = (fraction.numerator < 0) !== (fraction.denominator < 0);
+  
+  // Calculate whole and remainder
+  const whole = Math.floor(absNum / absDen);
+  const remainder = absNum % absDen;
+  
+  const mixedNumber = {
+    whole: isNegative ? -whole : whole,
+    numerator: remainder,
+    denominator: absDen,
+    isNegative
+  };
+  
+  return {
+    mixedNumber,
+    success: true
+  };
+};
+
+/**
+ * Converts a mixed number to an improper fraction
+ * @param {number} whole - The whole number part
+ * @param {number} numerator - The numerator of the fractional part
+ * @param {number} denominator - The denominator of the fractional part
+ * @returns {Object} Improper fraction with status information
+ */
+export const toImproperFraction = (whole, numerator, denominator) => {
+  // Validate inputs
+  if (typeof whole !== 'number' || isNaN(whole) || 
+      typeof numerator !== 'number' || isNaN(numerator) ||
+      typeof denominator !== 'number' || isNaN(denominator)) {
+    return {
+      fraction: null,
+      error: "Invalid input: All parts must be numbers",
+      success: false
+    };
+  }
+  
+  // Check for division by zero
+  if (denominator === 0) {
+    return {
+      fraction: null,
+      error: "Denominator cannot be zero",
+      success: false
+    };
+  }
+  
+  // Calculate improper fraction
+  const isNegative = whole < 0;
+  const absWhole = Math.abs(whole);
+  const improperNumerator = (absWhole * denominator) + numerator;
+  
+  // Create the fraction
+  return createFraction(
+    isNegative ? -improperNumerator : improperNumerator, 
+    denominator
+  );
+};
+
+/**
  * Subtracts the second fraction from the first
  * @param {Object} fraction1 - The fraction to subtract from
  * @param {Object} fraction2 - The fraction to subtract
@@ -184,6 +284,7 @@ export const addFractions = (fraction1, fraction2) => {
 export const subtractFractions = (fraction1, fraction2) => {
   // Validate fraction objects
   if (!fraction1 || typeof fraction1 !== 'object' || 
+      fraction1 === null ||
       !('numerator' in fraction1) || !('denominator' in fraction1)) {
     return {
       fraction: null,
@@ -193,6 +294,7 @@ export const subtractFractions = (fraction1, fraction2) => {
   }
   
   if (!fraction2 || typeof fraction2 !== 'object' ||
+      fraction2 === null ||
       !('numerator' in fraction2) || !('denominator' in fraction2)) {
     return {
       fraction: null,
@@ -220,6 +322,7 @@ export const subtractFractions = (fraction1, fraction2) => {
 export const multiplyFractions = (fraction1, fraction2) => {
   // Validate fraction objects
   if (!fraction1 || typeof fraction1 !== 'object' || 
+      fraction1 === null ||
       !('numerator' in fraction1) || !('denominator' in fraction1)) {
     return {
       fraction: null,
@@ -229,6 +332,7 @@ export const multiplyFractions = (fraction1, fraction2) => {
   }
   
   if (!fraction2 || typeof fraction2 !== 'object' ||
+      fraction2 === null ||
       !('numerator' in fraction2) || !('denominator' in fraction2)) {
     return {
       fraction: null,
@@ -258,6 +362,7 @@ export const multiplyFractions = (fraction1, fraction2) => {
 export const divideFractions = (fraction1, fraction2) => {
   // Validate fraction objects
   if (!fraction1 || typeof fraction1 !== 'object' || 
+      fraction1 === null ||
       !('numerator' in fraction1) || !('denominator' in fraction1)) {
     return {
       fraction: null,
@@ -267,6 +372,7 @@ export const divideFractions = (fraction1, fraction2) => {
   }
   
   if (!fraction2 || typeof fraction2 !== 'object' ||
+      fraction2 === null ||
       !('numerator' in fraction2) || !('denominator' in fraction2)) {
     return {
       fraction: null,
@@ -300,6 +406,44 @@ export const divideFractions = (fraction1, fraction2) => {
  * @returns {string} Formatted fraction string
  */
 export const formatFraction = (fraction) => {
-  if (!fraction) return "Invalid fraction";
+  if (!fraction || typeof fraction !== 'object') return "Invalid fraction";
+  
+  // Handle zero numerator
+  if (fraction.numerator === 0) return "0";
+  
+  // Handle whole numbers
+  if (fraction.denominator === 1) return `${fraction.numerator}`;
+  
+  // Convert to mixed number if improper fraction
+  if (Math.abs(fraction.numerator) > fraction.denominator) {
+    const { mixedNumber, success } = toMixedNumber(fraction);
+    if (success && mixedNumber.numerator > 0) {
+      // Format as mixed number
+      return `${mixedNumber.whole} ${mixedNumber.numerator}/${mixedNumber.denominator}`;
+    } else if (success) {
+      // Just return the whole part if remainder is 0
+      return `${mixedNumber.whole}`;
+    }
+  }
+  
+  // Standard fraction format
   return `${fraction.numerator}/${fraction.denominator}`;
+};
+
+/**
+ * Finds a common denominator for a list of fractions
+ * @param {...Object} fractions - List of fraction objects
+ * @returns {number} The least common denominator
+ */
+export const findCommonDenominator = (...fractions) => {
+  if (!fractions || fractions.length === 0) return 1;
+  
+  let result = fractions[0]?.denominator || 1;
+  
+  for (let i = 1; i < fractions.length; i++) {
+    if (fractions[i] && fractions[i].denominator) {
+      result = lcm(result, fractions[i].denominator);
+    }
+  }
+  return result;
 };
