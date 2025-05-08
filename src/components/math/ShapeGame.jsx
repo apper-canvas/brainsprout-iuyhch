@@ -29,6 +29,7 @@ const ShapeGame = ({ onBackToMenu, onGameComplete, onScoreChange }) => {
   const XCircleIcon = getIcon('XCircle');
   const ArrowLeftIcon = getIcon('ArrowLeft');
   const RefreshCwIcon = getIcon('RefreshCw');
+  const ZapIcon = getIcon('Zap');
 
   // Shape data
   const shapes = {
