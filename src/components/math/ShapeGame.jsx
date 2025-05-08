@@ -407,7 +407,7 @@ const ShapeGame = ({ onBackToMenu, onGameComplete, onScoreChange }) => {
                   onClick={() => !showFeedback && handleOptionSelect(option)}
                   disabled={showFeedback || gameOver}
                   className={`p-4 rounded-xl font-medium text-center transition-all ${
-                    selectedOption === option
+                    selectedOption === option 
                       ? isCorrect
                         ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-2 border-green-500'
                         : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border-2 border-red-500'
@@ -417,7 +417,7 @@ const ShapeGame = ({ onBackToMenu, onGameComplete, onScoreChange }) => {
                   whileTap={{ scale: showFeedback ? 1 : 0.98 }}
                   variants={itemVariants}
                 >
-                  {option}
+                  <span className="text-black dark:text-white font-medium">{option}</span>
                   {showFeedback && selectedOption === option && (
                     <span className="inline-flex ml-2">
                       {isCorrect ? (
@@ -427,12 +427,6 @@ const ShapeGame = ({ onBackToMenu, onGameComplete, onScoreChange }) => {
                       )}
                     </span>
                   )}
-                  {/* Ensure text is always visible with a semi-transparent background */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-lg font-medium">
-                      {option}
-                    </span>
-                  </div>
                 </motion.button>
               ))}
             </div>
