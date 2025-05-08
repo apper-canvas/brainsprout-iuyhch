@@ -413,22 +413,25 @@ const BasicArithmeticGame = ({ onBackToMenu, onGameComplete, onScoreChange }) =>
                     {isCorrect ? (
                       <>
                         <CheckCircleIcon className="w-5 h-5 text-green-500 flex-shrink-0" />
-                        <p className="font-medium">Great job! That's correct!</p>
-                        <p className="font-medium">{getRandomPositiveFeedback()}</p>
+                        <div>
+                          <p className="font-medium">Great job! That's correct!</p>
+                          <p className="font-medium">{getRandomPositiveFeedback()}</p>
+                        </div>
+                      </>
                     ) : (
                       <>
                         <XCircleIcon className="w-5 h-5 text-red-500 flex-shrink-0" />
-                        <p className="font-medium">
-                          Not quite! The correct answer is: <span className="font-bold">{question.correctAnswer}</span>
-                        </p>
-                      </>
-                      /* Add specific hints based on operation type */
-                      {operationType === 'addition' && (
-                        <p className="text-sm mt-1">Remember, when adding numbers, the total gets larger.</p>
-                      )}
-                      {operationType === 'subtraction' && (
-                        <p className="text-sm mt-1">When subtracting, the result is smaller than the first number.</p>
-                      )}
+                        <div>
+                          <p className="font-medium">
+                            Not quite! The correct answer is: <span className="font-bold">{question.correctAnswer}</span>
+                          </p>
+                          {operationType === 'addition' && (
+                            <p className="text-sm mt-1">Remember, when adding numbers, the total gets larger.</p>
+                          )}
+                          {operationType === 'subtraction' && (
+                            <p className="text-sm mt-1">When subtracting, the result is smaller than the first number.</p>
+                          )}
+                        </div>
                     )}
                   </div>
                 </motion.div>
