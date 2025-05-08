@@ -1,5 +1,4 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import getIcon from '../utils/iconUtils';
 
 // Game card component to improve readability
 const GameCard = ({ game, onSelect }) => {
@@ -120,28 +119,33 @@ const GameSelector = ({ subject, onGameSelect, playerName }) => {
       }
     ]
   };
-    visible: { opacity: 1 }
-  };
-      {/* Static welcome message that won't blink/re-render */}
-      <WelcomeMessage playerName={playerName} subject={subject} />
-      
-      {/* Game filters - static rendering */}
-      {subject === 'math' && (
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
-          {renderFilters()}
+
+  return (
+    <motion.div 
+      className="container px-4 py-8 mx-auto"
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+    >
+      <div className="grid gap-6">
+        {/* Static welcome message that won't blink/re-render */}
+        <WelcomeMessage playerName={playerName} subject={subject} />
+        
+        {/* Game filters - static rendering */}
+        {subject === 'math' && (
+          <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
+            {renderFilters()}
+          </div>
+        )}
+        
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {games[subject]?.map(game => (
+            <GameCard key={game.id} game={game} onSelect={onGameSelect} />
+          ))}
         </div>
-      )}
-      <h2 className="text-2xl font-bold mb-6 text-center transition-none">
-        <span>Choose a {subject.charAt(0).toUpperCase() + subject.slice(1)} Game, </span><span className="transition-none">{playerName}!</span>
-      </h2>
-          <GameCard key={game.id} game={game} onSelect={onGameSelect} />
-              </div>
-            </div>
-          </motion.div>
-        ))}
       </div>
     </motion.div>
   );
+};
+
 export default GameSelector;
-            whileHover={{ scale: 1.03 }}
-              <h3 className="text-lg font-bold">{game.title}</h3>
