@@ -28,10 +28,9 @@ const GameSelector = ({ subject, onGameSelect, playerName }) => {
         id: 'counting',
         title: 'Counting Adventure',
         description: 'Count objects and match with correct numbers',
-        icon: HashIcon,
+        icon: getIcon('Hash'),
         color: 'bg-green-100 dark:bg-green-900/30',
-        iconColor: 'text-green-600 dark:text-green-400',
-        comingSoon: true
+        iconColor: 'text-green-600 dark:text-green-400'
       },
       {
         id: 'basic-arithmetic',

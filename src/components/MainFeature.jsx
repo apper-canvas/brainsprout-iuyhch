@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import getIcon from '../utils/iconUtils';
 import GameSelector from './GameSelector';
 import NumberRecognitionGame from './math/NumberRecognitionGame';
-
+import CountingGame from './math/CountingGame';
 
 const MainFeature = ({ playerName, subject, darkMode }) => {
   // State for game mechanics
@@ -431,6 +431,17 @@ const MainFeature = ({ playerName, subject, darkMode }) => {
           onScoreChange={handleGameScoreChange}
         />
       )}
+      
+      {activeGame === 'counting' && (
+        <CountingGame 
+          onBackToMenu={handleBackToGameSelection}
+          onGameComplete={(finalScore, finalLevel) => {
+            setBadges(prev => [...prev, `counting-master-${finalLevel}`]);
+          }}
+          onScoreChange={handleGameScoreChange}
+        />
+      )}
+      
       <AnimatePresence mode="wait">
         {!gameOver && !levelComplete ? (
           <motion.div
