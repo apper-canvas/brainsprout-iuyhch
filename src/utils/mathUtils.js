@@ -88,3 +88,100 @@ export const generateNumberChallenge = (level) => {
   
   return { questionRep, targetNumber };
 };
+
+/**
+ * Multiplies two or more numbers with error handling
+ * @param {...number} nums - Numbers to multiply
+ * @returns {Object} - Result with product and status information
+ */
+export const multiply = (...nums) => {
+  // Validate all inputs are numbers
+  for (let i = 0; i < nums.length; i++) {
+    if (typeof nums[i] !== 'number' || isNaN(nums[i])) {
+      return {
+        result: null,
+        error: `Invalid input: "${nums[i]}" is not a number`,
+        success: false
+      };
+    }
+  }
+
+  // Handle empty input
+  if (nums.length === 0) {
+    return {
+      result: 1, // Multiplicative identity
+      success: true
+    };
+  }
+
+  let product = 1;
+  for (const num of nums) {
+    // Check for overflow before multiplying
+    if (num !== 0 && Math.abs(product) > Number.MAX_SAFE_INTEGER / Math.abs(num)) {
+      return {
+        result: null,
+        error: "Overflow: Result would be too large",
+        success: false
+      };
+    }
+    product *= num;
+  }
+
+  return {
+    result: product,
+    success: true
+  };
+};
+
+/**
+ * Divides the first number by the remaining numbers with error handling
+ * @param {...number} nums - First number (dividend) followed by divisors
+ * @returns {Object} - Result with quotient and status information
+ */
+export const divide = (...nums) => {
+  // Validate all inputs are numbers
+  for (let i = 0; i < nums.length; i++) {
+    if (typeof nums[i] !== 'number' || isNaN(nums[i])) {
+      return {
+        result: null,
+        error: `Invalid input: "${nums[i]}" is not a number`,
+        success: false
+      };
+    }
+  }
+
+  // Handle missing inputs
+  if (nums.length === 0) {
+    return {
+      result: null,
+      error: "Division requires at least one number",
+      success: false
+    };
+  }
+
+  // If only one number provided, return that number
+  if (nums.length === 1) {
+    return {
+      result: nums[0],
+      success: true
+    };
+  }
+
+  let result = nums[0];
+  for (let i = 1; i < nums.length; i++) {
+    // Check for division by zero
+    if (nums[i] === 0) {
+      return {
+        result: null,
+        error: "Division by zero is not allowed",
+        success: false
+      };
+    }
+    result /= nums[i];
+  }
+
+  return {
+    result: result,
+    success: true
+  };
+};
