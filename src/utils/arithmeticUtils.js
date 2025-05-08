@@ -82,7 +82,7 @@ export const add = (...nums) => {
  */
 export const subtract = (...nums) => {
   // Validate inputs
-  const validation = validateNumbers(nums);
+  // Validate that all inputs are numbers
   if (!validation.valid) {
     return {
       result: null,
@@ -110,16 +110,36 @@ export const subtract = (...nums) => {
 
   let result = nums[0];
   for (let i = 1; i < nums.length; i++) {
-    // Check for potential overflow or underflow
-    if ((nums[i] > 0 && result < MIN_SAFE_INTEGER + nums[i]) || 
-        (nums[i] < 0 && result > MAX_SAFE_INTEGER + nums[i])) {
+    const currentNum = nums[i];
+    
+    // Check for underflow: if we're subtracting a positive number and result would go below MIN_SAFE_INTEGER
+    if (currentNum > 0 && result < MIN_SAFE_INTEGER + currentNum) {
       return {
+        result: null,
+        error: `Underflow: Result would be below minimum safe integer (${MIN_SAFE_INTEGER})`,
+        success: false
+      };
+    }
+    
+    // Check for overflow: if we're subtracting a negative number and result would exceed MAX_SAFE_INTEGER
+    if (currentNum < 0 && result > MAX_SAFE_INTEGER + currentNum) {
+      return {
+        result: null,
         result: null,
         error: "Overflow: Result would be outside safe integer range",
         success: false
       };
     }
     result -= nums[i];
+  }
+
+  // Additional validation for the final result
+  if (result > MAX_SAFE_INTEGER || result < MIN_SAFE_INTEGER) {
+    return {
+      result: null,
+      error: "Result exceeds safe integer range",
+      success: false
+    };
   }
 
   return {
