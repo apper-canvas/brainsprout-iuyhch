@@ -437,7 +437,7 @@ export const formatFraction = (fraction) => {
   
   // Handle whole numbers
   if (fraction.denominator === 1) return `${fraction.numerator}`;
-  
+  if (fraction.denominator === 1) return `${fraction.numerator}`;
   // Convert to mixed number if improper fraction
   if (Math.abs(fraction.numerator) > fraction.denominator) {
     const { mixedNumber, success } = toMixedNumber(fraction);
