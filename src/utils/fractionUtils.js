@@ -353,14 +353,12 @@ export const subtractFractions = (fraction1, fraction2) => {
  */
 export const multiplyFractions = (fraction1, fraction2) => {
   // Validate fraction objects
-  if (!fraction1 || 
-      typeof fraction1 !== 'object' || 
+  if (!fraction1 ||
+      typeof fraction1 !== 'object' ||
       fraction1 === null ||
-      !('numerator' in fraction1) || 
+      !('numerator' in fraction1) ||
       !('denominator' in fraction1)) {
     return {
-      fraction: null,
-      error: "Invalid first fraction object",
       fraction: null,
       error: "Invalid first fraction object",
       success: false
@@ -369,6 +367,10 @@ export const multiplyFractions = (fraction1, fraction2) => {
   
   if (!fraction2 || typeof fraction2 !== 'object' ||
       fraction2 === null ||
+      !('numerator' in fraction2) ||
+      !('denominator' in fraction2)) {
+    return {
+      fraction: null,
       error: "Invalid second fraction object",
       success: false
     };
@@ -428,6 +430,14 @@ export const divideFractions = (fraction1, fraction2) => {
       !('numerator' in fraction1) || !('denominator' in fraction1)) {
     return {
       fraction: null,
+      error: "Invalid first fraction object",
+      success: false
+    };
+  }
+  
+  if (!fraction2 || typeof fraction2 !== 'object' ||
+      fraction2 === null ||
+      fraction: null,
       !('numerator' in fraction2) || !('denominator' in fraction2)) {
     return {
       fraction: null,
@@ -436,9 +446,9 @@ export const divideFractions = (fraction1, fraction2) => {
     };
   }
   
-  // Multiply numerators and denominators
-  const productNumerator = fraction1.numerator * fraction2.numerator;
-  const productDenominator = fraction1.denominator * fraction2.denominator;
+  // Check if we're dividing by zero
+  if (fraction2.numerator === 0) {
+    return {
       fraction: null,
       error: "Cannot divide by zero",
       success: false
