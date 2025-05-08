@@ -419,21 +419,16 @@ const BasicArithmeticGame = ({ onBackToMenu, onGameComplete, onScoreChange }) =>
                       <>
                         <XCircleIcon className="w-5 h-5 text-red-500 flex-shrink-0" />
                         <p className="font-medium">
-                        <div>
-                          <p className="font-medium">
-                            Not quite! The correct answer is: <span className="font-bold">{question.correctAnswer}</span>
-                          </p>
-                          {/* Add specific hints based on operation type */}
-                          {operationType === 'addition' && (
-                            <p className="text-sm mt-1">Remember, when adding numbers, the total gets larger.</p>
-                          )}
-                          {operationType === 'subtraction' && (
-                            <p className="text-sm mt-1">When subtracting, the result is smaller than the first number.</p>
-                          )}
-                        </div>
                           Not quite! The correct answer is: <span className="font-bold">{question.correctAnswer}</span>
                         </p>
                       </>
+                      /* Add specific hints based on operation type */
+                      {operationType === 'addition' && (
+                        <p className="text-sm mt-1">Remember, when adding numbers, the total gets larger.</p>
+                      )}
+                      {operationType === 'subtraction' && (
+                        <p className="text-sm mt-1">When subtracting, the result is smaller than the first number.</p>
+                      )}
                     )}
                   </div>
                 </motion.div>
