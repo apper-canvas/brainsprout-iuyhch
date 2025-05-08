@@ -39,7 +39,6 @@ const GameSelector = ({ subject, onGameSelect, playerName }) => {
         icon: PlusIcon,
         color: 'bg-purple-100 dark:bg-purple-900/30',
         iconColor: 'text-purple-600 dark:text-purple-400',
-        comingSoon: true
       },
       {
         id: 'fractions',
