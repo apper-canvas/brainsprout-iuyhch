@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
+import getIcon from '../utils/iconUtils';
 
 // Game card component to improve readability
 const GameCard = ({ game, onSelect }) => {
