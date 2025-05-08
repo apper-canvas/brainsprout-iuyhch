@@ -113,7 +113,6 @@ const CountingGame = ({
       setQuestion({
         text: "How many objects do you see?",
         display: challenge.objectDisplay.display,
-        "How many objects do you see?",
         correctAnswer: challenge.targetCount,
         // Track more information for better feedback
         info: {
@@ -131,16 +130,17 @@ const CountingGame = ({
       }
     } else if (challenge.type === 'skip-counting') {
       setQuestion({
-        // Track more information for better feedback
+        text: `What comes next in this sequence? ${challenge.increment === 10 ? '(counting by 10s)' : 
+                challenge.increment === 5 ? '(counting by 5s)' :
+                challenge.increment === 3 ? '(counting by 3s)' : 
+                challenge.increment === 2 ? '(counting by 2s)' : ''}`,
+        display: challenge.sequence.join(', ') + ", ...",
+        displayType: 'sequence',
+        correctAnswer: challenge.answer,
+        info: {
           groupSize: challenge.objectDisplay.type === 'grouped' ? 10 : 1,
           objectName: getRandomCountingObjectName(challenge.objectDisplay.display)
         }
-        text: `What comes next in this sequence? ${challenge.increment === 10 ? '(counting by 10s)' : 
-                                                  challenge.increment === 5 ? '(counting by 5s)' :
-                                                  challenge.increment === 3 ? '(counting by 3s)' :
-        text: `What comes next in this sequence? ${challenge.increment === 10 ? '(counting by 10s)' : 
-        displayType: 'sequence',
-        correctAnswer: challenge.answer
       });
       
       // Generate answer options
