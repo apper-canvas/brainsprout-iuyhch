@@ -345,19 +345,11 @@ export const subtractFractions = (fraction1, fraction2) => {
   return result.success ? simplifyFraction(result.fraction) : result;
 };
 
-/**
- * Multiplies two fractions
- * @param {Object} fraction1 - The first fraction
- * @param {Object} fraction2 - The second fraction
- * @returns {Object} Result fraction with status information
- */
 export const multiplyFractions = (fraction1, fraction2) => {
   // Validate fraction objects
-  if (!fraction1 ||
-      typeof fraction1 !== 'object' ||
+  if (!fraction1 || typeof fraction1 !== 'object' || 
       fraction1 === null ||
-      !('numerator' in fraction1) ||
-      !('denominator' in fraction1)) {
+      !('numerator' in fraction1) || !('denominator' in fraction1)) {
     return {
       fraction: null,
       error: "Invalid first fraction object",
@@ -367,8 +359,7 @@ export const multiplyFractions = (fraction1, fraction2) => {
   
   if (!fraction2 || typeof fraction2 !== 'object' ||
       fraction2 === null ||
-      !('numerator' in fraction2) ||
-      !('denominator' in fraction2)) {
+      !('numerator' in fraction2) || !('denominator' in fraction2)) {
     return {
       fraction: null,
       error: "Invalid second fraction object",
@@ -376,44 +367,13 @@ export const multiplyFractions = (fraction1, fraction2) => {
     };
   }
   
-  // Check for zero denominators
-  if (fraction1.denominator === 0 || fraction2.denominator === 0) {
-    return {
-      fraction: null,
-      error: "Cannot multiply fractions with zero denominators",
-      success: false
-    };
-  }
+  // Multiply numerators and denominators
+  const productNumerator = fraction1.numerator * fraction2.numerator;
+  const productDenominator = fraction1.denominator * fraction2.denominator;
   
-  // Handle special case: multiplying by zero
-  if (fraction1.numerator === 0 || fraction2.numerator === 0) {
-    return {
-      fraction: {
-        numerator: 0,
-        denominator: 1,
-        isNegative: false
-      },
-      success: true
-    };
-  }
-  
-  // Determine sign of result
-  const isNegative = (fraction1.numerator < 0) !== (fraction2.numerator < 0) ||
-                     (fraction1.denominator < 0) !== (fraction2.denominator < 0);
-  
-  // Multiply numerators and denominators using absolute values for clean calculation
-  const productNumerator = Math.abs(fraction1.numerator) * Math.abs(fraction2.numerator);
-  const productDenominator = Math.abs(fraction1.denominator) * Math.abs(fraction2.denominator);
-  
-  // Create the resulting fraction with proper sign
-  const result = createFraction(
-    isNegative ? -productNumerator : productNumerator, 
-    productDenominator
-  );
-  
+  // Create the resulting fraction and simplify it
+  const result = createFraction(productNumerator, productDenominator);
   if (!result.success) return result;
-  
-  // Simplify the result
   return simplifyFraction(result.fraction);
 };
 

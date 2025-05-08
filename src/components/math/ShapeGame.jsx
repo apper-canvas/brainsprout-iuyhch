@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
 import getIcon from '../../utils/iconUtils';
+import { getRandomQuestionTemplate, wasRecentlyAsked, trackQuestion, getRandomPositiveFeedback } from '../../utils/questionDiversityUtils';
 
 const ShapeGame = ({ onBackToMenu, onGameComplete, onScoreChange }) => {
   // Game state
@@ -16,6 +17,7 @@ const ShapeGame = ({ onBackToMenu, onGameComplete, onScoreChange }) => {
   const [questionsAnswered, setQuestionsAnswered] = useState(0);
   const [levelComplete, setLevelComplete] = useState(false);
   const [gameOver, setGameOver] = useState(false);
+  const [askedShapes, setAskedShapes] = useState([]);
   const [streak, setStreak] = useState(0);
 
   // Icons
@@ -149,14 +151,34 @@ const ShapeGame = ({ onBackToMenu, onGameComplete, onScoreChange }) => {
   // Generate a question based on the current level
   const generateQuestion = () => {
     const currentShapes = shapes[currentLevel];
-    const randomIndex = Math.floor(Math.random() * currentShapes.length);
-    const selectedShape = currentShapes[randomIndex];
+    
+    // Find a shape that hasn't been asked recently
+    let selectedShape;
+    let attempts = 0;
+    do {
+      const randomIndex = Math.floor(Math.random() * currentShapes.length);
+      selectedShape = currentShapes[randomIndex];
+      attempts++;
+    } while (
+      askedShapes.includes(selectedShape.name) && 
+      attempts < currentShapes.length && 
+      askedShapes.length < currentShapes.length
+    );
+    
+    // Track this shape to avoid immediate repetition
+    setAskedShapes(prev => {
+      const updated = [...prev, selectedShape.name];
+      // Keep only the last few shapes in history
+      return updated.length > 3 ? updated.slice(updated.length - 3) : updated;
+    });
     
     // Set question based on level
-    let questionText;
-    if (currentLevel === 1) {
-      questionText = `What shape is this?`;
-    } else if (currentLevel === 2) {
+    const questionTemplates = {
+      1: ["What shape is this?", "Can you identify this shape?", "Name this shape:", "Which shape do you see?"],
+      2: ["Identify this geometric shape:", "What do we call this shape?", "Name this geometric figure:", "Which polygon is shown here?"],
+      3: ["What 3D shape is represented here?", "Identify this three-dimensional shape:", "Name this 3D geometric form:", "Which 3D geometric solid is shown?"]
+    };
+    
       questionText = `Identify this geometric shape:`;
     } else {
       questionText = `What 3D shape is represented here?`;
@@ -195,14 +217,19 @@ const ShapeGame = ({ onBackToMenu, onGameComplete, onScoreChange }) => {
       const levelMultiplier = currentLevel;
       const pointsEarned = 10 * levelMultiplier;
       const newScore = score + pointsEarned;
-      setScore(newScore);
+      const newStreak = streak + 1;
+      setStreak(newStreak);
       setStreak(streak + 1);
       
       // Update parent component with new score
       onScoreChange(newScore);
+      // Use more varied success messages for longer streaks
+      const message = newStreak >= 3 ? `${getRandomPositiveFeedback()} +${pointsEarned} points!` : `+${pointsEarned} points!`;
+      const icon = newStreak >= 3 ? <StarIcon className="text-yellow-400" /> : null;
+      
       
       toast.success(`+${pointsEarned} points!`, { 
-        icon: <StarIcon className="text-yellow-400" />,
+        autoClose: 1500
         autoClose: 1000
       });
     } else {
@@ -421,7 +448,7 @@ const ShapeGame = ({ onBackToMenu, onGameComplete, onScoreChange }) => {
                         <CheckCircleIcon className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                         <div>
                           <p className="font-medium">Correct!</p>
-                          <p className="text-sm mt-1">{question.shape.description}</p>
+                          <p className="text-sm mt-1">A {question.shape.name.toLowerCase()} is {question.shape.description}.</p>
                         </div>
                       </>
                     ) : (
@@ -431,7 +458,15 @@ const ShapeGame = ({ onBackToMenu, onGameComplete, onScoreChange }) => {
                           <p className="font-medium">
                             Not quite! This is a <span className="font-bold">{question.correctAnswer}</span>.
                           </p>
-                          <p className="text-sm mt-1">{question.shape.description}</p>
+                          <p className="text-sm mt-1">
+                            A {question.shape.name.toLowerCase()} is {question.shape.description}
+                          </p>
+                          {/* Add a hint about the shape properties to help learning */}
+                          {currentLevel === 1 && (
+                            <p className="text-sm mt-1 italic">
+                              Try to look at the number of sides and angles to identify basic shapes.
+                            </p>
+                          )}
                         </div>
                       </>
                     )}

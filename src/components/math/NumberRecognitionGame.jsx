@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
+import { getRandomQuestionTemplate, wasRecentlyAsked, trackQuestion, getRandomPositiveFeedback } from '../../utils/questionDiversityUtils';
 import getIcon from '../../utils/iconUtils';
 import { generateNumberChallenge, getRandomNumber, numberToWord } from '../../utils/mathUtils';
 
@@ -25,6 +26,7 @@ const NumberRecognitionGame = ({
   const [levelComplete, setLevelComplete] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [gameMode, setGameMode] = useState('identify-number'); // or 'match-representation'
+  const [recentNumbers, setRecentNumbers] = useState([]);
 
   // Icons
   const HeartIcon = getIcon('Heart');
@@ -32,6 +34,7 @@ const NumberRecognitionGame = ({
   const CheckCircleIcon = getIcon('CheckCircle');
   const XCircleIcon = getIcon('XCircle');
   const ArrowLeftIcon = getIcon('ArrowLeft');
+  const StarIcon = getIcon('Star');
   const RefreshCwIcon = getIcon('RefreshCw');
 
   // Generate a new question
@@ -47,9 +50,15 @@ const NumberRecognitionGame = ({
   }, [score]);
 
   const generateQuestion = () => {
-    // Alternate between game modes every few questions
-    if (questionsAnswered > 0 && questionsAnswered % 3 === 0) {
-      setGameMode(prev => prev === 'identify-number' ? 'match-representation' : 'identify-number');
+    // Alternate between game modes with some randomness
+    if (questionsAnswered > 0) {
+      // Weighted randomness so "identify-number" appears more often
+      const rand = Math.random();
+      if (rand < 0.65) {
+        setGameMode('identify-number');
+      } else {
+        setGameMode('match-representation');
+      }
     }
 
     if (gameMode === 'identify-number') {
@@ -59,9 +68,32 @@ const NumberRecognitionGame = ({
     }
   };
 
+  // Check if a number was recently used
+  const wasNumberRecentlyUsed = (num) => {
+    return recentNumbers.includes(num);
+  };
+
+  // Track a number to avoid repetition
+  const trackRecentNumber = (num) => {
+    setRecentNumbers(prev => {
+      const updated = [...prev, num];
+      // Keep only the last 10 numbers
+      return updated.length > 10 ? updated.slice(-10) : updated;
+    });
+  };
+
   const generateIdentifyNumberQuestion = () => {
-    // Generate challenge data
-    const { questionRep, targetNumber } = generateNumberChallenge(level);
+    let challenge;
+    let attempts = 0;
+    
+    // Try to avoid repeating numbers
+    do {
+      challenge = generateNumberChallenge(level);
+      attempts++;
+    } while (wasNumberRecentlyUsed(challenge.targetNumber) && attempts < 5);
+    
+    const { questionRep, targetNumber } = challenge;
+    trackRecentNumber(targetNumber);
     
     // Set the question
     setQuestion({
@@ -97,13 +129,34 @@ const NumberRecognitionGame = ({
   };
 
   const generateMatchRepresentationQuestion = () => {
-    // Generate a target number appropriate for the level
-    const maxNumber = level === 1 ? 10 : (level === 2 ? 20 : 50);
-    const targetNumber = getRandomNumber(1, maxNumber);
+    // Define number range based on level
+    const maxNumber = level === 1 ? 10 : (level === 2 ? 20 : 100);
+    const minNumber = level === 3 ? 10 : 1;
+    
+    // Get a target number that wasn't recently used
+    let targetNumber;
+    let attempts = 0;
+    
+    do {
+      targetNumber = getRandomNumber(minNumber, maxNumber);
+      attempts++;
+    } while (wasNumberRecentlyUsed(targetNumber) && attempts < 5);
+    
+    // Track this number
+    trackRecentNumber(targetNumber);
+    
+    // Question templates for variety
+    const questionTemplates = [
+      `Find the number ${targetNumber}`,
+      `Which option shows the number ${targetNumber}?`,
+      `Select the representation of ${targetNumber}`,
+      `Where do you see the number ${targetNumber}?`,
+      `Identify the representation of ${targetNumber}`
+    ];
     
     // Create the question
     setQuestion({
-      text: `Find the number ${targetNumber}`,
+      text: getRandomQuestionTemplate(questionTemplates),
       display: targetNumber.toString(),
       type: 'prompt',
       correctAnswer: targetNumber
@@ -119,7 +172,9 @@ const NumberRecognitionGame = ({
         Math.max(1, targetNumber - range), 
         targetNumber + range
       );
-      
+
+      // Avoid having too similar options (e.g. avoid 7, 7, 7, 7)
+      if (optionNumbers.some(n => Math.abs(n - randomNumber) < 2)) continue;
       if (!optionNumbers.includes(randomNumber)) {
         optionNumbers.push(randomNumber);
       }
@@ -191,9 +246,20 @@ const NumberRecognitionGame = ({
       // Correct answer
       const pointsEarned = 10 * level;
       setScore(prevScore => prevScore + pointsEarned);
-      setStreak(prevStreak => prevStreak + 1);
+      const newStreak = streak + 1;
+      setStreak(newStreak);
       
-      toast.success(`+${pointsEarned} points!`, { autoClose: 1000 });
+      // More varied success messages based on streak
+      let successMessage = `+${pointsEarned} points!`;
+      if (newStreak >= 3) {
+        successMessage = `${getRandomPositiveFeedback()} +${pointsEarned} points!`;
+      }
+      
+      toast.success(successMessage, { 
+        autoClose: 1500,
+        hideProgressBar: newStreak < 3,
+        icon: newStreak >= 3 ? <StarIcon className="text-yellow-400" /> : undefined
+      });
     } else {
       // Incorrect answer
       setLives(prevLives => prevLives - 1);
@@ -386,6 +452,25 @@ const NumberRecognitionGame = ({
               )}
               <p className="font-medium">
                 {isCorrect ? 'Great job! That\'s correct!' : `The correct answer is: ${question.correctAnswer}`}
+              {!isCorrect && (
+                <div className="mt-2 text-sm">
+                  {gameMode === 'identify-number' && question?.type === 'objects' && (
+                    <p>
+                      Try counting each symbol one by one.
+                    </p>
+                  )}
+                  
+                  {gameMode === 'identify-number' && question?.type === 'tally' && (
+                    <p>
+                      Remember that tally marks are counted in groups of 5.
+                    </p>
+                  )}
+                  
+                  {gameMode === 'identify-number' && question?.type === 'word' && (
+                    <p>Practice reading number words carefully.</p>
+                  )}
+                </div>
+              )}
               </p>
             </div>
           </motion.div>

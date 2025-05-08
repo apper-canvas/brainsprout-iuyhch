@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
+import { getRandomQuestionTemplate, wasRecentlyAsked, trackQuestion, getRandomPositiveFeedback } from '../../utils/questionDiversityUtils';
 import getIcon from '../../utils/iconUtils';
 import { 
   generateCountingChallenge, 
@@ -29,6 +30,7 @@ const CountingGame = ({
   const [levelComplete, setLevelComplete] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [challengeType, setChallengeType] = useState('basic-counting');
+  const [previousNumbers, setPreviousNumbers] = useState([]);
 
   // Icons
   const HeartIcon = getIcon('Heart');
@@ -64,6 +66,11 @@ const CountingGame = ({
       const challengeTypes = ['basic-counting', 'skip-counting'];
       const selectedType = challengeTypes[questionsAnswered % 2];
       
+      // Try to avoid repeating the same number
+      while (previousNumbers.includes(challenge.targetCount) && previousNumbers.length < 5) {
+        challenge = generateCountingChallenge(level);
+      }
+      
       setChallengeType(selectedType);
       if (selectedType === 'basic-counting') {
         challenge = generateCountingChallenge(level);
@@ -72,6 +79,10 @@ const CountingGame = ({
       }
     } else {
       // Level 3: Mix of all challenge types
+        // Avoid repetition
+        while (previousNumbers.includes(challenge.targetCount) && previousNumbers.length < 8) {
+          challenge = generateCountingChallenge(level);
+        }
       const challengeTypes = ['basic-counting', 'skip-counting', 'counting-backwards'];
       const selectedType = challengeTypes[questionsAnswered % 3];
       
@@ -84,20 +95,51 @@ const CountingGame = ({
         challenge = generateCountingBackwardsChallenge(level);
       }
     }
+        // Avoid repetition
+        while (previousNumbers.includes(challenge.targetCount) && previousNumbers.length < 10) {
+          challenge = generateCountingChallenge(level);
+        }
     
     // Set the question and options based on the challenge type
     if (challenge.type === 'basic-counting') {
       setQuestion({
         text: "How many objects do you see?",
         display: challenge.objectDisplay.display,
+
+    // Update the list of previous numbers
+    if (challenge.targetCount) {
+      setPreviousNumbers(prev => {
+        const updated = [...prev, challenge.targetCount];
+        return updated.length > 10 ? updated.slice(-10) : updated;
+      });
+    } else if (challenge.answer) {
+      setPreviousNumbers(prev => {
+        const updated = [...prev, challenge.answer];
+        return updated.length > 10 ? updated.slice(-10) : updated;
+      });
+    }
         displayType: challenge.objectDisplay.type,
         correctAnswer: challenge.targetCount
       });
+      // Different question templates for variety
+      const questionTemplates = [
+        "How many objects do you see?",
+        "Count the objects and tell me how many there are.",
+        "Count and tell me: how many items are shown?",
+        "How many can you count?",
+        `How many ${getRandomCountingObjectName(challenge.objectDisplay.display)} are there?`
+      ];
+
       
-      // Generate answer options
+        text: getRandomQuestionTemplate(questionTemplates),
       generateOptions(challenge.targetCount, level);
     } else if (challenge.type === 'skip-counting') {
-      setQuestion({
+        correctAnswer: challenge.targetCount,
+        // Track more information for better feedback
+        info: {
+          groupSize: challenge.objectDisplay.type === 'grouped' ? 10 : 1,
+          objectName: getRandomCountingObjectName(challenge.objectDisplay.display)
+        }
         text: `What comes next in this sequence? ${challenge.increment === 10 ? '(counting by 10s)' : 
                                                   challenge.increment === 5 ? '(counting by 5s)' :
                                                   challenge.increment === 3 ? '(counting by 3s)' :
@@ -121,6 +163,20 @@ const CountingGame = ({
       generateOptions(challenge.answer, level);
     }
   };
+  // Helper function to extract the object name from emoji display
+  const getRandomCountingObjectName = (display) => {
+    if (!display || display.length === 0) return "objects";
+    
+    // Map common emoji to their names
+    const emojiNames = {
+      '🍎': 'apples', '🌟': 'stars', '🎈': 'balloons', '🐶': 'puppies', 
+      '🚂': 'trains', '🍦': 'ice creams', '🌼': 'flowers', '🦋': 'butterflies',
+      '🐱': 'kittens', '🐢': 'turtles', '🦁': 'lions', '🐘': 'elephants'
+    };
+    
+    return emojiNames[display[0]] || "objects";
+  };
+
 
   const generateOptions = (correctAnswer, level) => {
     // Create array with correct answer
@@ -172,8 +228,19 @@ const CountingGame = ({
       const pointsEarned = 10 * level;
       setScore(prevScore => prevScore + pointsEarned);
       setStreak(prevStreak => prevStreak + 1);
+
+      // More varied success messages
+      let successMessage = `+${pointsEarned} points!`;
+      const newStreak = streak + 1;
       
-      toast.success(`+${pointsEarned} points!`, { autoClose: 1000 });
+      if (newStreak >= 3) {
+        successMessage = `${getRandomPositiveFeedback()} +${pointsEarned} points!`;
+      }
+      
+      toast.success(successMessage, { 
+        autoClose: 1500,
+        icon: newStreak >= 3 ? <StarIcon className="text-yellow-400" /> : undefined
+      });
     } else {
       // Incorrect answer
       setLives(prevLives => prevLives - 1);
@@ -386,15 +453,49 @@ const CountingGame = ({
               </p>
             </div>
             
-            {!isCorrect && challengeType === 'basic-counting' && (
+            {!isCorrect && challengeType === 'basic-counting' && question.info && (
               <p className="mt-2 text-sm">
-                Try counting the objects one by one or in groups to get the total.
+                {level === 1 ? (
+                  "Try counting the objects one by one to get the total."
+                ) : question.info.groupSize > 1 ? (
+                  `Try counting in groups of ${question.info.groupSize} to make it easier!`
+                ) : (
+                  "Try counting the objects in groups of 2 or 5 to get the total faster."
+                )}
               </p>
             )}
             
             {!isCorrect && challengeType === 'skip-counting' && (
               <p className="mt-2 text-sm">
-                Look at the pattern - each number increases by a fixed amount.
+                {(() => {
+                  // Extract the pattern from the sequence if available
+                  if (question && question.display) {
+                    const numbers = question.display
+                      .replace("...", "")
+                      .split(", ")
+                      .map(n => parseInt(n.trim()))
+                      .filter(n => !isNaN(n));
+                    
+                    if (numbers.length >= 2) {
+                      const diff = numbers[1] - numbers[0];
+                      
+                      if (diff === 2) return "Look at the pattern - each number increases by 2.";
+                      if (diff === 3) return "Look at the pattern - each number increases by 3.";
+                      if (diff === 5) return "Look at the pattern - each number increases by 5.";
+                      if (diff === 10) return "Look at the pattern - each number increases by 10.";
+                      
+                      return `Look at the pattern - each number increases by ${diff}.`;
+                    }
+                  }
+                  
+                  return "Look at the pattern - each number increases by a fixed amount.";
+                })()}
+              </p>
+            )}
+            
+            {!isCorrect && challengeType === 'counting-backwards' && (
+              <p className="mt-2 text-sm">
+                Notice that the numbers are decreasing. Try counting backwards from the last number.
               </p>
             )}
           </motion.div>

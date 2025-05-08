@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
+import { getRandomQuestionTemplate, wasRecentlyAsked, trackQuestion, getRandomPositiveFeedback } from '../../utils/questionDiversityUtils';
 import getIcon from '../../utils/iconUtils';
 import { add, subtract } from '../../utils/arithmeticUtils';
 
@@ -19,6 +20,7 @@ const BasicArithmeticGame = ({ onBackToMenu, onGameComplete, onScoreChange }) =>
   const [levelComplete, setLevelComplete] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [operationType, setOperationType] = useState('addition'); // 'addition' or 'subtraction'
+  const [recentProblems, setRecentProblems] = useState([]);
 
   // Icons
   const HeartIcon = getIcon('Heart');
@@ -31,15 +33,47 @@ const BasicArithmeticGame = ({ onBackToMenu, onGameComplete, onScoreChange }) =>
 
   // Generate a new question based on current level
   const generateQuestion = () => {
-    // Determine operation type (keep the same for consistency within a level)
-    // Or randomize if you want mixed operations
-    if (questionsAnswered === 0) {
-      setOperationType(Math.random() > 0.5 ? 'addition' : 'subtraction');
+    // Alternate operations to provide variety, but with some randomness
+    // Higher levels have more subtraction
+    const rand = Math.random();
+    if (currentLevel === 1) {
+      setOperationType(rand < 0.7 ? 'addition' : 'subtraction');
+    } else if (currentLevel === 2) {
+      setOperationType(rand < 0.5 ? 'addition' : 'subtraction');
+    } else {
+      setOperationType(rand < 0.4 ? 'addition' : 'subtraction');
     }
 
-    let num1, num2, correctAnswer, questionText;
+    let num1, num2, correctAnswer, questionText, problemKey;
+    let attempts = 0;
+    let isDuplicate = false;
 
-    // Generate numbers based on level and operation
+    // Try to avoid repeating the exact same problem
+    do {
+      isDuplicate = false;
+      [num1, num2, correctAnswer, questionText, problemKey] = generateProblem();
+      
+      // Check if this is a duplicate problem
+      if (recentProblems.includes(problemKey)) {
+        isDuplicate = true;
+        attempts++;
+      }
+    } while (isDuplicate && attempts < 5);
+
+    // Track this problem
+    trackRecentProblem(problemKey);
+    
+    // Set the question and options
+    setQuestion({ text: questionText, correctAnswer });
+    setOptions(generateOptions(correctAnswer, currentLevel));
+    setSelectedOption(null);
+    setShowFeedback(false);
+  };
+  
+  // Generate a math problem based on level and operation
+  const generateProblem = () => {
+    let num1, num2, correctAnswer, questionText;
+    
     if (operationType === 'addition') {
       // Addition: increasing number ranges by level
       switch (currentLevel) {
@@ -69,7 +103,25 @@ const BasicArithmeticGame = ({ onBackToMenu, onGameComplete, onScoreChange }) =>
         correctAnswer = num1 + num2;
       }
       
-      questionText = `What is ${num1} + ${num2}?`;
+      // Question templates for addition
+      const questionTemplates = [
+        `What is ${num1} + ${num2}?`,
+        `Find the sum of ${num1} and ${num2}.`,
+        `Calculate ${num1} + ${num2}:`,
+        `${num1} plus ${num2} equals?`,
+        `Add ${num1} and ${num2}:`
+      ];
+      
+      // For level 3, include some word problems
+      if (currentLevel === 3) {
+        const objects = ['books', 'apples', 'toys', 'cards', 'points', 'stickers'];
+        const object = objects[Math.floor(Math.random() * objects.length)];
+        questionTemplates.push(
+          `Sam has ${num1} ${object} and gets ${num2} more. How many ${object} does Sam have now?`,
+          `If you have ${num1} ${object} and find ${num2} more, how many do you have in total?`
+        );
+      }
+      questionText = getRandomQuestionTemplate(questionTemplates);
     } else {
       // Subtraction: increasing ranges by level
       switch (currentLevel) {
@@ -99,19 +151,41 @@ const BasicArithmeticGame = ({ onBackToMenu, onGameComplete, onScoreChange }) =>
         correctAnswer = num1 - num2;
       }
       
-      questionText = `What is ${num1} - ${num2}?`;
+      // Question templates for subtraction
+      const questionTemplates = [
+        `What is ${num1} - ${num2}?`,
+        `Find the difference of ${num1} and ${num2}.`,
+        `Calculate ${num1} - ${num2}:`,
+        `${num1} minus ${num2} equals?`,
+        `Subtract ${num2} from ${num1}:`
+      ];
+      
+      // For level 3, include some word problems
+      if (currentLevel === 3) {
+        const objects = ['books', 'apples', 'toys', 'cards', 'points', 'stickers'];
+        const object = objects[Math.floor(Math.random() * objects.length)];
+        questionTemplates.push(
+          `Sam has ${num1} ${object} and gives away ${num2}. How many ${object} does Sam have left?`,
+          `If you have ${num1} ${object} and use ${num2}, how many remain?`
+        );
+      }
+      questionText = getRandomQuestionTemplate(questionTemplates);
     }
-
-    // Generate options (including the correct answer)
-    const newOptions = generateOptions(correctAnswer, currentLevel);
     
-    // Set the question and options
-    setQuestion({ text: questionText, correctAnswer });
-    setOptions(newOptions);
-    setSelectedOption(null);
-    setShowFeedback(false);
+    // Create a key to identify this problem
+    const problemKey = `${operationType}-${num1}-${num2}`;
+    
+    return [num1, num2, correctAnswer, questionText, problemKey];
   };
-
+  
+  // Track a problem to avoid repetition
+  const trackRecentProblem = (problemKey) => {
+    setRecentProblems(prev => {
+      const updated = [...prev, problemKey];
+      // Keep only the last 10 problems
+      return updated.length > 10 ? updated.slice(-10) : updated;
+    });
+  };
   // Generate multiple choice options
   const generateOptions = (correctAnswer, level) => {
     const options = [correctAnswer];
@@ -340,11 +414,23 @@ const BasicArithmeticGame = ({ onBackToMenu, onGameComplete, onScoreChange }) =>
                       <>
                         <CheckCircleIcon className="w-5 h-5 text-green-500 flex-shrink-0" />
                         <p className="font-medium">Great job! That's correct!</p>
-                      </>
+                        <p className="font-medium">{getRandomPositiveFeedback()}</p>
                     ) : (
                       <>
                         <XCircleIcon className="w-5 h-5 text-red-500 flex-shrink-0" />
                         <p className="font-medium">
+                        <div>
+                          <p className="font-medium">
+                            Not quite! The correct answer is: <span className="font-bold">{question.correctAnswer}</span>
+                          </p>
+                          {/* Add specific hints based on operation type */}
+                          {operationType === 'addition' && (
+                            <p className="text-sm mt-1">Remember, when adding numbers, the total gets larger.</p>
+                          )}
+                          {operationType === 'subtraction' && (
+                            <p className="text-sm mt-1">When subtracting, the result is smaller than the first number.</p>
+                          )}
+                        </div>
                           Not quite! The correct answer is: <span className="font-bold">{question.correctAnswer}</span>
                         </p>
                       </>

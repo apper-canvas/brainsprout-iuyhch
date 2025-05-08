@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
+import { getRandomQuestionTemplate, wasRecentlyAsked, trackQuestion, getRandomPositiveFeedback } from '../../utils/questionDiversityUtils';
 import getIcon from '../../utils/iconUtils';
 import {
   createFraction,
@@ -26,6 +27,7 @@ const FractionGame = ({ onBackToMenu, onGameComplete, onScoreChange }) => {
   const [questionsAnswered, setQuestionsAnswered] = useState(0);
   const [levelComplete, setLevelComplete] = useState(false);
   const [streak, setStreak] = useState(0);
+  const [recentFractionProblems, setRecentFractionProblems] = useState([]);
 
   // Icons
   const HeartIcon = getIcon('Heart');
@@ -44,7 +46,11 @@ const FractionGame = ({ onBackToMenu, onGameComplete, onScoreChange }) => {
 
   // Generate a fraction question based on current level
   const generateQuestion = () => {
-    let questionType, fraction1, fraction2, operation, correctResult, correctAnswer, questionText;
+    let questionType, fraction1, fraction2, operation, correctResult, correctAnswer, questionText, problemKey;
+    let isDuplicate = false;
+    let attempts = 0;
+    
+    do {
     
     // Different question types based on level
     const questionTypes = level === 1 
@@ -76,17 +82,47 @@ const FractionGame = ({ onBackToMenu, onGameComplete, onScoreChange }) => {
     fraction2 = createFraction(num2, den2).fraction;
     
     // Create the question based on type
+    let questionTemplates = [];
+    
     switch (questionType) {
       case 'identify':
         // Simply identify the equivalent fraction
         const simplifiedFrac = simplifyFraction(fraction1).fraction;
-        questionText = `Which fraction is equivalent to ${formatFraction(fraction1)}?`;
+        
+        questionTemplates = [
+          `Which fraction is equivalent to ${formatFraction(fraction1)}?`,
+          `Select the fraction equal to ${formatFraction(fraction1)}:`,
+          `Which of these equals ${formatFraction(fraction1)}?`,
+          `Find the equivalent fraction for ${formatFraction(fraction1)}:`
+        ];
+        
+        questionText = getRandomQuestionTemplate(questionTemplates);
         correctAnswer = formatFraction(simplifiedFrac);
+        problemKey = `identify-${fraction1.numerator}-${fraction1.denominator}`;
         break;
       
       case 'addition':
         operation = addFractions;
-        questionText = `What is ${formatFraction(fraction1)} + ${formatFraction(fraction2)}?`;
+        
+        questionTemplates = [
+          `What is ${formatFraction(fraction1)} + ${formatFraction(fraction2)}?`,
+          `Find the sum: ${formatFraction(fraction1)} + ${formatFraction(fraction2)}`,
+          `Add these fractions: ${formatFraction(fraction1)} + ${formatFraction(fraction2)}`,
+          `Calculate ${formatFraction(fraction1)} + ${formatFraction(fraction2)}:`
+        ];
+        
+        // Add word problems for higher levels
+        if (level >= 2) {
+          const contexts = ['pizza', 'chocolate bar', 'cake', 'hour'];
+          const context = contexts[Math.floor(Math.random() * contexts.length)];
+          
+          questionTemplates.push(
+            `Sam ate ${formatFraction(fraction1)} of a ${context} and then another ${formatFraction(fraction2)}. How much ${context} did Sam eat in total?`,
+            `If you use ${formatFraction(fraction1)} of a ${context} and then another ${formatFraction(fraction2)}, how much have you used altogether?`
+          );
+        }
+        
+        questionText = getRandomQuestionTemplate(questionTemplates);
         correctResult = operation(fraction1, fraction2);
         correctAnswer = formatFraction(correctResult.fraction);
         break;
@@ -96,14 +132,29 @@ const FractionGame = ({ onBackToMenu, onGameComplete, onScoreChange }) => {
         if (fraction1.numerator * fraction2.denominator < fraction2.numerator * fraction1.denominator) {
           [fraction1, fraction2] = [fraction2, fraction1];
         }
-        operation = subtractFractions;
+        
+        questionTemplates = [
+          `What is ${formatFraction(fraction1)} - ${formatFraction(fraction2)}?`,
+          `Find the difference: ${formatFraction(fraction1)} - ${formatFraction(fraction2)}`,
+          `Subtract: ${formatFraction(fraction1)} - ${formatFraction(fraction2)}`,
+          `Calculate ${formatFraction(fraction1)} - ${formatFraction(fraction2)}:`
+        ];
+        
         questionText = `What is ${formatFraction(fraction1)} - ${formatFraction(fraction2)}?`;
         correctResult = operation(fraction1, fraction2);
         correctAnswer = formatFraction(correctResult.fraction);
         break;
       
       case 'multiplication':
-        operation = multiplyFractions;
+        
+        questionTemplates = [
+          `What is ${formatFraction(fraction1)} × ${formatFraction(fraction2)}?`,
+          `Find the product: ${formatFraction(fraction1)} × ${formatFraction(fraction2)}`,
+          `Multiply: ${formatFraction(fraction1)} × ${formatFraction(fraction2)}`,
+          `Calculate ${formatFraction(fraction1)} × ${formatFraction(fraction2)}:`
+        ];
+        
+        questionText = getRandomQuestionTemplate(questionTemplates);
         questionText = `What is ${formatFraction(fraction1)} × ${formatFraction(fraction2)}?`;
         correctResult = operation(fraction1, fraction2);
         correctAnswer = formatFraction(correctResult.fraction);
@@ -112,6 +163,18 @@ const FractionGame = ({ onBackToMenu, onGameComplete, onScoreChange }) => {
     
     // Generate options (including the correct answer)
     const optionsArray = generateOptions(correctAnswer, questionType, fraction1, fraction2);
+
+    // Create a unique key for this problem
+    problemKey = `${questionType}-${fraction1.numerator}-${fraction1.denominator}-${fraction2.numerator}-${fraction2.denominator}`;
+    
+    // Check if this exact problem was recently seen
+    isDuplicate = recentFractionProblems.includes(problemKey);
+    attempts++;
+  } while (isDuplicate && attempts < 5);
+    
+    // Add to recent problems list
+    setRecentFractionProblems(prev => 
+      [...prev.slice(Math.max(0, prev.length - 9)), problemKey]);
     
     setQuestion({
       text: questionText,
@@ -236,6 +299,15 @@ const FractionGame = ({ onBackToMenu, onGameComplete, onScoreChange }) => {
       onScoreChange(newScore);
       
       toast.success(`+${pointsEarned} points!`, { 
+      });
+      
+      // Additional motivational message for higher streaks
+      if (streak + 1 >= 3) {
+        setTimeout(() => {
+          toast.info(`${getRandomPositiveFeedback()} You're on fire with ${streak + 1} correct answers in a row!`, {
+            icon: <SparkleStar className="text-purple-500" />,
+          });
+        }, 1200);
         icon: <StarIcon className="text-yellow-400" />,
         autoClose: 1000
       });
@@ -401,7 +473,7 @@ const FractionGame = ({ onBackToMenu, onGameComplete, onScoreChange }) => {
               {isCorrect ? (
                 <>
                   <CheckCircleIcon className="w-5 h-5 text-green-500 flex-shrink-0" />
-                  <p className="font-medium">Great job! That's correct!</p>
+                  <p className="font-medium">{getRandomPositiveFeedback()}</p>
                 </>
               ) : (
                 <>
@@ -409,6 +481,27 @@ const FractionGame = ({ onBackToMenu, onGameComplete, onScoreChange }) => {
                   <p className="font-medium">
                     Not quite! The correct answer is: <span className="font-bold">{question.correctAnswer}</span>
                   </p>
+                  
+                  {/* Add specific fraction-related hints based on question type */}
+                  {question.type === 'identify' && (
+                    <p className="text-sm mt-1">
+                      Remember to simplify fractions by finding the GCD (greatest common divisor) of the numerator and denominator.
+                    </p>
+                  )}
+                  
+                  {question.type === 'addition' && (
+                    <p className="text-sm mt-1">
+                      When adding fractions, make sure the denominators are the same first by finding a common denominator.
+                    </p>
+                  )}
+                  
+                  {question.type === 'subtraction' && (
+                    <p className="text-sm mt-1">
+                      When subtracting fractions, the denominators must be the same. Try finding a common denominator first.
+                    </p>
+                  )}
+                  
+                  {question.type === 'multiplication' && <p className="text-sm mt-1">When multiplying fractions, multiply numerators together and denominators together.</p>}
                 </>
               )}
             </div>
