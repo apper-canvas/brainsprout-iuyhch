@@ -74,11 +74,17 @@ const GameSelector = ({ subject, onGameSelect, playerName }) => {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
   };
+  
+  // Stable content variants - no motion for stable text elements
+  const stableContentVariants = {
+    hidden: { opacity: 1 },
+    visible: { opacity: 1 }
+  };
 
   return (
-    <motion.div className="card p-6 md:p-8" variants={containerVariants} initial="hidden" animate="visible">
-      <h2 className="text-2xl font-bold mb-6 text-center">
-        Choose a {subject.charAt(0).toUpperCase() + subject.slice(1)} Game, {playerName}!
+    <motion.div className="card p-6 md:p-8 transition-all duration-300" variants={containerVariants} initial="hidden" animate="visible">
+      <h2 className="text-2xl font-bold mb-6 text-center transition-none">
+        <span>Choose a {subject.charAt(0).toUpperCase() + subject.slice(1)} Game, </span><span className="transition-none">{playerName}!</span>
       </h2>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
