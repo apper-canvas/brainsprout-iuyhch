@@ -102,6 +102,14 @@ const CountingGame = ({
     
     // Set the question and options based on the challenge type
     if (challenge.type === 'basic-counting') {
+      // Different question templates for variety
+      const questionTemplates = [
+        "How many objects do you see?",
+        "Count the objects and tell me how many there are.",
+        "Count and tell me: how many items are shown?",
+        "How many can you count?",
+        `How many ${getRandomCountingObjectName(challenge.objectDisplay.display)} are there?`
+      ];
       setQuestion({
         text: "How many objects do you see?",
         display: challenge.objectDisplay.display,
@@ -117,34 +125,23 @@ const CountingGame = ({
         const updated = [...prev, challenge.answer];
         return updated.length > 10 ? updated.slice(-10) : updated;
       });
-    }
-        displayType: challenge.objectDisplay.type,
-        correctAnswer: challenge.targetCount
-      });
-      // Different question templates for variety
-      const questionTemplates = [
         "How many objects do you see?",
-        "Count the objects and tell me how many there are.",
-        "Count and tell me: how many items are shown?",
-        "How many can you count?",
-        `How many ${getRandomCountingObjectName(challenge.objectDisplay.display)} are there?`
-      ];
-
-      
-        text: getRandomQuestionTemplate(questionTemplates),
-      generateOptions(challenge.targetCount, level);
-    } else if (challenge.type === 'skip-counting') {
         correctAnswer: challenge.targetCount,
         // Track more information for better feedback
         info: {
           groupSize: challenge.objectDisplay.type === 'grouped' ? 10 : 1,
           objectName: getRandomCountingObjectName(challenge.objectDisplay.display)
         }
+      });
+        // Track more information for better feedback
+          groupSize: challenge.objectDisplay.type === 'grouped' ? 10 : 1,
+          objectName: getRandomCountingObjectName(challenge.objectDisplay.display)
+        }
         text: `What comes next in this sequence? ${challenge.increment === 10 ? '(counting by 10s)' : 
                                                   challenge.increment === 5 ? '(counting by 5s)' :
                                                   challenge.increment === 3 ? '(counting by 3s)' :
-                                                  '(counting by 2s)'}`,
-        display: challenge.sequence.join(', ') + ", ...",
+        },
+        text: `What comes next in this sequence? ${challenge.increment === 10 ? '(counting by 10s)' : 
         displayType: 'sequence',
         correctAnswer: challenge.answer
       });
@@ -152,6 +149,14 @@ const CountingGame = ({
       // Generate answer options
       generateOptions(challenge.answer, level);
     } else if (challenge.type === 'counting-backwards') {
+
+      // Update previous numbers
+      if (challenge.answer) {
+        setPreviousNumbers(prev => {
+          const updated = [...prev, challenge.answer];
+          return updated.length > 10 ? updated.slice(-10) : updated;
+        });
+      }
       setQuestion({
         text: "What comes next in this sequence counting backwards?",
         display: challenge.sequence.join(', ') + ", ...",
