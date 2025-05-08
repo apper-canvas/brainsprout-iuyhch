@@ -232,7 +232,6 @@ const ShapeGame = ({ onBackToMenu, onGameComplete, onScoreChange }) => {
       
       toast.success(`+${pointsEarned} points!`, { 
         autoClose: 1500
-        autoClose: 1000
       });
     } else {
       // Incorrect answer
