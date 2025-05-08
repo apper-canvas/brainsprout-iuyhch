@@ -432,6 +432,7 @@ const BasicArithmeticGame = ({ onBackToMenu, onGameComplete, onScoreChange }) =>
                             <p className="text-sm mt-1">When subtracting, the result is smaller than the first number.</p>
                           )}
                         </div>
+                      </>
                   </div>
                 </motion.div>
               )}
