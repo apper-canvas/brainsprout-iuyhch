@@ -82,6 +82,8 @@ export const add = (...nums) => {
  */
 export const subtract = (...nums) => {
   // Validate inputs
+  const validation = validateNumbers(nums);
+  
   // Validate that all inputs are numbers
   if (!validation.valid) {
     return {
@@ -125,7 +127,6 @@ export const subtract = (...nums) => {
     if (currentNum < 0 && result > MAX_SAFE_INTEGER + currentNum) {
       return {
         result: null,
-        result: null,
         error: "Overflow: Result would be outside safe integer range",
         success: false
       };
@@ -144,6 +145,73 @@ export const subtract = (...nums) => {
 
   return {
     result: result,
+    success: true
+  };
+};
+
+/**
+ * Multiplies two or more numbers with error handling
+ * @param {...number} nums - Numbers to multiply
+ * @returns {Object} - Result with product and status information
+ */
+export const multiply = (...nums) => {
+  // Validate inputs
+  const validation = validateNumbers(nums);
+  if (!validation.valid) {
+    return {
+      result: null,
+      error: validation.error,
+      success: false
+    };
+  }
+
+  // Check for empty input
+  if (nums.length === 0) {
+    return {
+      result: 1, // Multiplicative identity
+      success: true
+    };
+  }
+
+  let product = 1;
+  
+  // Check for zeros in the input - shortcut evaluation
+  for (const num of nums) {
+    if (num === 0) {
+      return {
+        result: 0,
+        success: true
+      };
+    }
+  }
+
+  for (const num of nums) {
+    // Skip multiplication by 1 as it won't change the product
+    if (num === 1) continue;
+    
+    // Check for overflow before multiplying
+    // If |product| * |num| > MAX_SAFE_INTEGER, overflow will occur
+    if (Math.abs(product) > MAX_SAFE_INTEGER / Math.abs(num)) {
+      return {
+        result: null,
+        error: "Overflow: Result would be too large",
+        success: false
+      };
+    }
+    
+    // Check for underflow - result too close to zero to represent accurately
+    if (product !== 0 && Math.abs(product * num) < Number.MIN_VALUE) {
+      return {
+        result: null,
+        error: "Underflow: Result would be too small to represent accurately",
+        success: false
+      };
+    }
+    product *= num;
+  }
+
+  return {
+    result: product,
     success: true
   };
 };
