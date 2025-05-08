@@ -215,3 +215,68 @@ export const multiply = (...nums) => {
     success: true
   };
 };
+
+/**
+ * Divides the first number by the remaining numbers with error handling
+ * @param {...number} nums - First number (dividend) followed by divisors
+ * @returns {Object} - Result with quotient and status information
+ */
+export const divide = (...nums) => {
+  // Validate inputs
+  const validation = validateNumbers(nums);
+  if (!validation.valid) {
+    return {
+      result: null,
+      error: validation.error,
+      success: false
+    };
+  }
+
+  // Check for missing inputs
+  if (nums.length === 0) {
+    return {
+      result: null,
+      error: "Division requires at least one number",
+      success: false
+    };
+  }
+
+  // If only one number provided, return that number
+  if (nums.length === 1) {
+    return {
+      result: nums[0],
+      success: true
+    };
+  }
+
+  let result = nums[0];
+  for (let i = 1; i < nums.length; i++) {
+    // Check for division by zero
+    if (nums[i] === 0) {
+      return {
+        result: null,
+        error: "Division by zero is not allowed",
+        success: false
+      };
+    }
+    
+    // Division doesn't typically cause overflow in JavaScript due to floating-point representation
+    // However, we should check for very small divisors that could lead to very large results
+    if (Math.abs(nums[i]) < 1e-15 && result !== 0) {
+      return {
+        result: null,
+        error: "Near-zero divisor would cause overflow",
+        success: false
+      };
+    }
+    
+    result /= nums[i];
+  }
+
+  // Check if result is finite (not Infinity, -Infinity, or NaN)
+  if (!isFinite(result)) {
+    return { result: null, error: "Result is not a finite number", success: false };
+  }
+
+  return { result, success: true };
+};
