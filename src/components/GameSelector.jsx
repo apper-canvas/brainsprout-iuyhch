@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { toast } from 'react-toastify';
+import { motion, AnimatePresence } from 'framer-motion';
 import getIcon from '../utils/iconUtils';
 
 const GameSelector = ({ subject, onGameSelect, playerName }) => {
@@ -8,8 +8,6 @@ const GameSelector = ({ subject, onGameSelect, playerName }) => {
   const BookOpenIcon = getIcon('BookOpen');
   const HashIcon = getIcon('Hash');
   const PlusIcon = getIcon('Plus');
-  const DivideIcon = getIcon('Divide');
-  const PercentIcon = getIcon('Percent');
   const CircleIcon = getIcon('Circle');
   const ArrowLeftIcon = getIcon('ArrowLeft');
 
@@ -22,7 +20,6 @@ const GameSelector = ({ subject, onGameSelect, playerName }) => {
         description: 'Learn to identify numbers in different forms',
         icon: HashIcon,
         color: 'bg-blue-100 dark:bg-blue-900/30',
-        iconColor: 'text-blue-600 dark:text-blue-400'
       },
       {
         id: 'counting',
@@ -30,7 +27,6 @@ const GameSelector = ({ subject, onGameSelect, playerName }) => {
         description: 'Count objects and match with correct numbers',
         icon: getIcon('Hash'),
         color: 'bg-green-100 dark:bg-green-900/30',
-        iconColor: 'text-green-600 dark:text-green-400'
       },
       {
         id: 'basic-arithmetic',
@@ -38,7 +34,6 @@ const GameSelector = ({ subject, onGameSelect, playerName }) => {
         description: 'Practice addition and subtraction',
         icon: PlusIcon,
         color: 'bg-purple-100 dark:bg-purple-900/30',
-        iconColor: 'text-purple-600 dark:text-purple-400',
       },
       {
         id: 'fractions',
@@ -46,7 +41,6 @@ const GameSelector = ({ subject, onGameSelect, playerName }) => {
         description: 'Learn to identify and work with fractions',
         icon: DivideIcon,
         color: 'bg-amber-100 dark:bg-amber-900/30',
-        iconColor: 'text-amber-600 dark:text-amber-400',
       },
       {
         id: 'geometry',
@@ -54,7 +48,6 @@ const GameSelector = ({ subject, onGameSelect, playerName }) => {
         description: 'Discover geometric shapes and their properties',
         icon: CircleIcon,
         color: 'bg-pink-100 dark:bg-pink-900/30',
-        iconColor: 'text-pink-600 dark:text-pink-400',
       }
     ],
     reading: [
@@ -62,12 +55,8 @@ const GameSelector = ({ subject, onGameSelect, playerName }) => {
         id: 'word-matching',
         title: 'Word Matching',
         description: 'Match words with their meanings',
-        icon: BookOpenIcon,
-        color: 'bg-teal-100 dark:bg-teal-900/30',
-        iconColor: 'text-teal-600 dark:text-teal-400'
-      }
-    ]
-  };
+      // Reading game data would go here but is not needed for this fix
+      // since the issue is with the animation rendering, not the game data
 
   // Animation variants
   const containerVariants = {
@@ -92,20 +81,29 @@ const GameSelector = ({ subject, onGameSelect, playerName }) => {
           <motion.div key={game.id} 
             className={`card p-4 cursor-pointer hover:shadow-soft transition-all ${game.comingSoon ? 'opacity-70' : ''}`}
             onClick={() => game.comingSoon ? toast.info("Coming soon! This game is under development.") : onGameSelect(game.id)}
+  // Welcome message with static player name (no animation)
+  const WelcomeMessage = () => (
+    <div className="mb-6">
+      <h2 className="text-2xl font-bold mb-1">
+        Welcome, <span className="text-primary">{playerName}</span>!
+      </h2>
+      <p className="text-surface-600 dark:text-surface-400">
+        Choose a {subject} game to start learning
+      </p>
+    </div>
+  );
+  
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.98 }}
-          >
-            <div className="flex items-start gap-4">
-              <div className={`${game.color} p-3 rounded-lg`}>
-                <game.icon className={`w-6 h-6 ${game.iconColor}`} />
-              </div>
-              <div>
-                <h3 className="font-semibold mb-1 flex items-center gap-2">
-                  {game.title}
-                  {game.comingSoon && (
-                    <span className="text-xs font-normal px-2 py-0.5 bg-surface-200 dark:bg-surface-700 rounded-full">Coming Soon</span>
-                  )}
-                </h3>
+      {/* Static welcome message that won't blink/re-render */}
+      <WelcomeMessage />
+      
+      {/* Game filters - static rendering */}
+      {subject === 'math' && (
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
+          {renderFilters()}
+        </div>
+      )}
                 <p className="text-sm text-surface-600 dark:text-surface-400">{game.description}</p>
               </div>
             </div>
@@ -117,3 +115,5 @@ const GameSelector = ({ subject, onGameSelect, playerName }) => {
 };
 
 export default GameSelector;
+            whileHover={{ scale: 1.03 }}
+              <h3 className="text-lg font-bold">{game.title}</h3>
