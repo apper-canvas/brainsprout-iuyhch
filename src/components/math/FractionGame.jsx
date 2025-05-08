@@ -305,12 +305,11 @@ const FractionGame = ({ onBackToMenu, onGameComplete, onScoreChange }) => {
       if (streak + 1 >= 3) {
         setTimeout(() => {
           toast.info(`${getRandomPositiveFeedback()} You're on fire with ${streak + 1} correct answers in a row!`, {
-            icon: <SparkleStar className="text-purple-500" />,
+            icon: <StarIcon className="text-yellow-400" />,
+            autoClose: 1000
           });
         }, 1200);
-        icon: <StarIcon className="text-yellow-400" />,
-        autoClose: 1000
-      });
+      }
     } else {
       // Incorrect answer
       setLives(lives - 1);
