@@ -113,8 +113,6 @@ const CountingGame = ({
       setQuestion({
         text: "How many objects do you see?",
         display: challenge.objectDisplay.display,
-
-    // Update the list of previous numbers
     if (challenge.targetCount) {
       setPreviousNumbers(prev => {
         const updated = [...prev, challenge.targetCount];
@@ -125,6 +123,7 @@ const CountingGame = ({
         const updated = [...prev, challenge.answer];
         return updated.length > 10 ? updated.slice(-10) : updated;
       });
+    }
         "How many objects do you see?",
         correctAnswer: challenge.targetCount,
         // Track more information for better feedback
@@ -140,7 +139,6 @@ const CountingGame = ({
         text: `What comes next in this sequence? ${challenge.increment === 10 ? '(counting by 10s)' : 
                                                   challenge.increment === 5 ? '(counting by 5s)' :
                                                   challenge.increment === 3 ? '(counting by 3s)' :
-        },
         text: `What comes next in this sequence? ${challenge.increment === 10 ? '(counting by 10s)' : 
         displayType: 'sequence',
         correctAnswer: challenge.answer
